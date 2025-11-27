@@ -268,3 +268,66 @@ tr:last-child td {
         padding: 8px 10px;
     }
 }
+
+/* --- Toast Notification --- */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: var(--card);
+    color: var(--text-light);
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    border-left: 4px solid var(--primary);
+    min-width: 280px;
+    opacity: 0;
+    transform: translateX(400px);
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-success {
+    border-left-color: var(--accent);
+}
+
+.toast-error {
+    border-left-color: var(--danger);
+}
+
+.toast-info {
+    border-left-color: var(--primary);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(400px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 600px) {
+    #toast-container {
+        left: 20px;
+        right: 20px;
+    }
+    .toast {
+        min-width: unset;
+    }
+}

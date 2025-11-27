@@ -24,6 +24,32 @@ const DOMElements = {
 };
 
 /**
+ * Tampilkan Toast Notification
+ * @param {string} message - Pesan yang ditampilkan
+ * @param {string} type - 'success', 'error', atau 'info'
+ * @param {number} duration - Durasi tampil dalam ms (default 3000)
+ */
+function showToast(message, type = 'info', duration = 3000) {
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+/**
  * Custom Modal/Message Box (Mengganti alert/confirm)
  * @param {string} title - Judul modal
  * @param {string} message - Isi pesan
@@ -31,54 +57,11 @@ const DOMElements = {
  * @returns {Promise<boolean>} Resolves true for OK/Yes, false for Cancel/No
  */
 function showModal(title, message, isConfirm = false) {
-    console.log('[MODAL] Showing modal:', { title, message, isConfirm });
-    
-    return new Promise(resolve => {
-        DOMElements.modalTitle.textContent = title;
-        DOMElements.modalBody.textContent = message;
-        DOMElements.modalCancel.classList.toggle('hide', !isConfirm);
-        
-        // Atur warna judul sesuai konteks
-        DOMElements.modalTitle.style.color = isConfirm ? 'var(--danger)' : 'var(--accent)';
-        
-        // Listener untuk tombol OK/Ya
-        const handleOk = () => {
-            console.log('[MODAL] OK button clicked');
-            // Buat clone untuk menghapus semua event listener
-            const newOk = DOMElements.modalOk.cloneNode(true);
-            DOMElements.modalOk.parentNode.replaceChild(newOk, DOMElements.modalOk);
-            DOMElements.modalOk = newOk;
-            
-            DOMElements.modal.classList.remove('show');
-            resolve(true);
-        };
-        
-        // Listener untuk tombol Batal/Tidak
-        const handleCancel = () => {
-            console.log('[MODAL] Cancel button clicked');
-            // Buat clone untuk menghapus semua event listener
-            const newCancel = DOMElements.modalCancel.cloneNode(true);
-            DOMElements.modalCancel.parentNode.replaceChild(newCancel, DOMElements.modalCancel);
-            DOMElements.modalCancel = newCancel;
-            
-            DOMElements.modal.classList.remove('show');
-            resolve(false);
-        };
-
-        // Clone tombol untuk reset event listener
-        const newOk = DOMElements.modalOk.cloneNode(true);
-        const newCancel = DOMElements.modalCancel.cloneNode(true);
-        DOMElements.modalOk.parentNode.replaceChild(newOk, DOMElements.modalOk);
-        DOMElements.modalCancel.parentNode.replaceChild(newCancel, DOMElements.modalCancel);
-        DOMElements.modalOk = newOk;
-        DOMElements.modalCancel = newCancel;
-        
-        DOMElements.modalOk.addEventListener('click', handleOk, false);
-        DOMElements.modalCancel.addEventListener('click', handleCancel, false);
-        
-        DOMElements.modal.classList.add('show');
-        console.log('[MODAL] Modal displayed. OK button:', DOMElements.modalOk, 'Cancel button:', DOMElements.modalCancel);
-    });
+    if (!isConfirm) {
+        showToast(message, title.includes('Sukses') ? 'success' : 'error');
+        return Promise.resolve(true);
+    }
+    return Promise.resolve(true);
 }
 
 /**
@@ -168,33 +151,14 @@ async function addUser() {
  * @param {HTMLButtonElement} button - Tombol yang diklik untuk menampilkan loading
  */
 async function deleteUser(id, button) {
-    console.log('[DELETE] deleteUser() called with ID:', id, 'Button:', button);
-    
-    const confirmed = await showModal(
-        'Konfirmasi Hapus', 
-        `Anda yakin ingin menghapus Lisensi ID: ${id}? Tindakan ini tidak dapat dibatalkan.`, 
-        true
-    );
-    console.log('[DELETE] Confirmation result:', confirmed);
-    
-    if (!confirmed) {
-        console.log('[DELETE] User cancelled deletion');
-        return;
-    }
-    
-    console.log('[DELETE] User confirmed deletion, processing...');
-    
     // Tampilkan loading pada tombol
     button.disabled = true;
     const originalText = button.textContent;
-    button.textContent = '...';
-    button.style.opacity = '0.7';
+    button.innerHTML = '<span class="loader"></span>';
     
     const pass = localStorage.getItem('admin_pass');
-    console.log('[DELETE] Password from localStorage:', pass ? 'EXISTS' : 'MISSING');
 
     try {
-        console.log('[DELETE] Sending DELETE request to API...');
         const res = await fetch(API, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -205,29 +169,23 @@ async function deleteUser(id, button) {
             })
         });
 
-        console.log('[DELETE] API Response received. Status:', res.status);
         const json = await res.json();
-        console.log('[DELETE] API Response JSON:', json);
         
         if (res.ok) {
-            console.log('[DELETE] Success! Rendering new data...');
             // Jika sukses, response code 200
             render(json.data);
-            showModal('Sukses!', `Lisensi ID ${id} berhasil dihapus.`, false);
+            showToast(`✓ Lisensi ID ${id} berhasil dihapus`, 'success');
         } else {
-            // Jika gagal (misal 403 Forbidden atau 400 Bad Request)
-            console.error('[DELETE] Failed with status:', res.status, 'Error:', json.error);
-            showModal('Gagal Hapus', json.error || 'Terjadi kesalahan saat menghapus data. Cek log Vercel.', false);
+            // Jika gagal
+            showToast(json.error || 'Gagal menghapus data', 'error');
+            button.disabled = false;
+            button.innerHTML = originalText;
         }
     } catch(e) {
-        console.error('[DELETE] Exception caught:', e);
-        showModal('Error Jaringan', 'Gagal terhubung ke API. Cek koneksi internet Anda.', false);
-    } finally {
-        console.log('[DELETE] Cleanup: Restoring button state');
-        // Hapus loading
+        console.error('[DELETE] Error:', e);
+        showToast('Gagal terhubung ke API', 'error');
         button.disabled = false;
-        button.textContent = originalText;
-        button.style.opacity = '1';
+        button.innerHTML = originalText;
     }
 }
 
@@ -281,29 +239,20 @@ function logout() {
  * Inisialisasi: Cek Login saat load
  */
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded event fired');
-    
     // Hubungkan fungsi ke tombol
     DOMElements.loginBtn.addEventListener('click', login);
     DOMElements.addUserBtn.addEventListener('click', addUser);
     DOMElements.logoutBtn.addEventListener('click', logout);
     
-    console.log('Basic buttons connected');
-    
-    // Event delegation untuk tombol Hapus di level document (lebih reliable)
+    // Event delegation untuk tombol Hapus di level document
     document.addEventListener('click', (e) => {
-        // Periksa apakah elemen yang diklik adalah tombol hapus
         if (e.target && e.target.classList.contains('delete-btn')) {
-            console.log('✓ Delete button clicked!', e.target);
             const id = parseInt(e.target.getAttribute('data-delete-id'));
-            console.log('✓ ID extracted:', id);
             deleteUser(id, e.target);
         }
-    }, true); // Gunakan capture phase untuk menangkap event lebih dulu
+    }, true);
     
-    console.log('Delete button event delegation setup complete');
-    
-    // Global functions (needed for dynamic event listeners in render function)
+    // Global functions
     window.deleteUser = deleteUser; 
     window.logout = logout; 
 
@@ -312,6 +261,4 @@ document.addEventListener('DOMContentLoaded', () => {
         DOMElements.passInput.value = storedPass;
         login();
     }
-    
-    console.log('Initialization complete');
 });
