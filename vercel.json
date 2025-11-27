@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    {
+      "source": "/api",
+      "destination": "/api/index.js"
+    }
+  ],
+  "build": {
+    "env": {
+      "ADMIN_PASSWORD": "@admin_password" 
+    }
+  }
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MannDev License Manager</title>
+    <!-- Font Inter dari Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">MannDev <span class="text-accent">Manager</span></h1>
+            <p class="subtitle">Manajemen Lisensi Pengguna Terpusat</p>
+        </header>
+
+        <!-- Login Section -->
+        <div id="login-box" class="card">
+            <h2 class="card-title">Akses Admin</h2>
+            <input type="password" id="pass" placeholder="Masukkan Password Admin" required>
+            <button id="login-btn" class="btn btn-primary">Masuk ke Dashboard</button>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="hide">
+            <!-- Form Tambah User -->
+            <div class="card add-user-form">
+                <h2 class="card-title">Tambah Pengguna Baru</h2>
+                <input type="text" id="name" placeholder="Nama Pengguna (misal: Budi Santoso)" required>
+                <input type="number" id="id" placeholder="ID Lisensi (Angka, unik)" required>
+                <input type="text" id="wa" placeholder="No WA / Telegram" required>
+                <button id="add-user-btn" class="btn btn-success">
+                    <span id="add-loader" class="loader hide"></span>
+                    Simpan Pengguna
+                </button>
+            </div>
+
+            <!-- List Data -->
+            <div class="card data-list">
+                <h2 class="card-title">Daftar Lisensi Aktif</h2>
+                <div class="table-scroll">
+                    <table id="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama & Kontak</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody">
+                            <!-- Data akan dimuat di sini oleh app.js -->
+                            <tr><td colspan="3" class="text-center text-muted">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button id="logout-btn" class="btn-logout">Keluar / Reset Sesi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal for Alerts/Confirmations -->
+    <div id="custom-modal" class="modal hide">
+        <div class="modal-content">
+            <h3 id="modal-title">Pesan</h3>
+            <p id="modal-body">Pesan</p>
+            <div class="modal-actions">
+                <button id="modal-ok" class="btn btn-primary btn-sm">OK</button>
+                <button id="modal-cancel" class="btn btn-danger btn-sm hide">Batal</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
