@@ -43,26 +43,41 @@ function showModal(title, message, isConfirm = false) {
         
         // Listener untuk tombol OK/Ya
         const handleOk = () => {
-            console.log('[MODAL] OK clicked');
+            console.log('[MODAL] OK button clicked');
+            // Buat clone untuk menghapus semua event listener
+            const newOk = DOMElements.modalOk.cloneNode(true);
+            DOMElements.modalOk.parentNode.replaceChild(newOk, DOMElements.modalOk);
+            DOMElements.modalOk = newOk;
+            
             DOMElements.modal.classList.remove('show');
-            DOMElements.modalOk.removeEventListener('click', handleOk);
-            DOMElements.modalCancel.removeEventListener('click', handleCancel);
             resolve(true);
         };
         
         // Listener untuk tombol Batal/Tidak
         const handleCancel = () => {
-            console.log('[MODAL] Cancel clicked');
+            console.log('[MODAL] Cancel button clicked');
+            // Buat clone untuk menghapus semua event listener
+            const newCancel = DOMElements.modalCancel.cloneNode(true);
+            DOMElements.modalCancel.parentNode.replaceChild(newCancel, DOMElements.modalCancel);
+            DOMElements.modalCancel = newCancel;
+            
             DOMElements.modal.classList.remove('show');
-            DOMElements.modalOk.removeEventListener('click', handleOk);
-            DOMElements.modalCancel.removeEventListener('click', handleCancel);
             resolve(false);
         };
 
-        DOMElements.modalOk.addEventListener('click', handleOk);
-        DOMElements.modalCancel.addEventListener('click', handleCancel);
+        // Clone tombol untuk reset event listener
+        const newOk = DOMElements.modalOk.cloneNode(true);
+        const newCancel = DOMElements.modalCancel.cloneNode(true);
+        DOMElements.modalOk.parentNode.replaceChild(newOk, DOMElements.modalOk);
+        DOMElements.modalCancel.parentNode.replaceChild(newCancel, DOMElements.modalCancel);
+        DOMElements.modalOk = newOk;
+        DOMElements.modalCancel = newCancel;
+        
+        DOMElements.modalOk.addEventListener('click', handleOk, false);
+        DOMElements.modalCancel.addEventListener('click', handleCancel, false);
+        
         DOMElements.modal.classList.add('show');
-        console.log('[MODAL] Modal displayed');
+        console.log('[MODAL] Modal displayed. OK button:', DOMElements.modalOk, 'Cancel button:', DOMElements.modalCancel);
     });
 }
 
