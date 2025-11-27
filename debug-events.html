@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Event Listener</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        .box { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        button { padding: 10px 20px; background: #dc3545; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 16px; }
+        button:hover { background: #c82333; }
+        #console { background: #222; color: #0f0; padding: 15px; border-radius: 4px; font-family: monospace; height: 300px; overflow-y: auto; margin-top: 10px; }
+        .log { margin: 2px 0; }
+    </style>
+</head>
+<body>
+    <h1>Debug Event Listener Test</h1>
+    
+    <div class="box">
+        <h3>Test 1: Direct Click Handler</h3>
+        <button id="test-btn-1">Click Me (Direct Handler)</button>
+    </div>
+    
+    <div class="box">
+        <h3>Test 2: With Attribute Selector</h3>
+        <button id="test-btn-2" data-delete-id="123">Delete Test (With Attribute)</button>
+    </div>
+    
+    <div class="box">
+        <h3>Test 3: With Class</h3>
+        <button id="test-btn-3" class="delete-btn" data-delete-id="456">Delete Test (With Class)</button>
+    </div>
+    
+    <div class="box">
+        <h3>Console Output</h3>
+        <div id="console"></div>
+    </div>
+
+    <script>
+        // Redirect console.log ke halaman
+        const consoleDiv = document.getElementById('console');
+        const originalLog = console.log;
+        const originalError = console.error;
+
+        function logToPage(message, type = 'log') {
+            const div = document.createElement('div');
+            div.className = 'log';
+            div.textContent = `[${type.toUpperCase()}] ${message}`;
+            if (type === 'error') div.style.color = '#f00';
+            consoleDiv.appendChild(div);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            logToPage(args.join(' '));
+            originalLog.apply(console, args);
+        };
+        console.error = function(...args) {
+            logToPage(args.join(' '), 'error');
+            originalError.apply(console, args);
+        };
+
+        // Test 1: Direct handler
+        document.getElementById('test-btn-1').addEventListener('click', () => {
+            console.log('✓ Test 1: Direct handler worked!');
+        });
+
+        // Test 2: Check attribute
+        document.getElementById('test-btn-2').addEventListener('click', (e) => {
+            const id = e.target.getAttribute('data-delete-id');
+            console.log('✓ Test 2: Button clicked, attribute data-delete-id =', id);
+        });
+
+        // Test 3: Check class
+        document.getElementById('test-btn-3').addEventListener('click', (e) => {
+            const hasClass = e.target.classList.contains('delete-btn');
+            console.log('✓ Test 3: Button clicked, has delete-btn class =', hasClass);
+        });
+
+        // Test 4: Event delegation
+        console.log('Adding document-level event delegation for delete-btn class...');
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.classList.contains('delete-btn')) {
+                const id = parseInt(e.target.getAttribute('data-delete-id'));
+                console.log('✓ Test 4 (Delegation): Delete button clicked! ID =', id);
+            }
+        }, true);
+
+        console.log('Page loaded. Try clicking buttons above.');
+    </script>
+</body>
+</html>
