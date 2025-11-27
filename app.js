@@ -145,18 +145,30 @@ async function addUser() {
 /**
  * Fungsi untuk menghapus user
  * @param {number} id - ID pengguna yang akan dihapus
+ * @param {HTMLButtonElement} button - Tombol yang diklik untuk menampilkan loading
  */
-async function deleteUser(id) {
+async function deleteUser(id, button) {
+    console.log('deleteUser() dipanggil dengan ID:', id);
+    
     const confirmed = await showModal(
         'Konfirmasi Hapus', 
         `Anda yakin ingin menghapus Lisensi ID: ${id}? Tindakan ini tidak dapat dibatalkan.`, 
         true
     );
-    if (!confirmed) return;
+    if (!confirmed) {
+        console.log('User membatalkan penghapusan');
+        return;
+    }
+    
+    console.log('User mengkonfirmasi penghapusan, memproses...');
+    
+    // Tampilkan loading pada tombol
+    button.disabled = true;
+    const originalText = button.textContent;
+    button.textContent = '...';
+    button.style.opacity = '0.7';
     
     const pass = localStorage.getItem('admin_pass');
-
-    // Implementasi loading/disable mungkin di sini jika ada elemen spesifik untuk hapus
 
     try {
         const res = await fetch(API, {
@@ -170,14 +182,24 @@ async function deleteUser(id) {
         });
 
         const json = await res.json();
+        console.log('Response dari API:', json);
+        
         if (res.ok) {
+            // Jika sukses, response code 200
             render(json.data);
             showModal('Sukses!', `Lisensi ID ${id} berhasil dihapus.`, false);
         } else {
-            showModal('Gagal Hapus', json.error || 'Terjadi kesalahan saat menghapus data.', false);
+            // Jika gagal (misal 403 Forbidden atau 400 Bad Request)
+            showModal('Gagal Hapus', json.error || 'Terjadi kesalahan saat menghapus data. Cek log Vercel.', false);
         }
     } catch(e) {
+        console.error('Error saat delete:', e);
         showModal('Error Jaringan', 'Gagal terhubung ke API. Cek koneksi internet Anda.', false);
+    } finally {
+        // Hapus loading
+        button.disabled = false;
+        button.textContent = originalText;
+        button.style.opacity = '1';
     }
 }
 
@@ -194,22 +216,29 @@ function render(data) {
     
     data.sort((a, b) => a.id - b.id); // Urutkan berdasarkan ID
     
+    // Menggunakan DocumentFragment untuk menghindari reflow
+    const fragment = document.createDocumentFragment();
+    
     data.forEach(u => {
-        const row = `
-            <tr>
-                <td class="text-id">${u.id}</td>
-                <td>
-                    ${u.name} 
-                    <br> 
-                    <span class="text-contact">WA/Tele: ${u.no_wa}</span>
-                </td>
-                <td class="text-right">
-                    <button class="btn-danger" onclick="deleteUser(${u.id})">Hapus</button>
-                </td>
-            </tr>
+        const tr = document.createElement('tr');
+        
+        // Membangun string HTML untuk baris
+        tr.innerHTML = `
+            <td class="text-id">${u.id}</td>
+            <td>
+                ${u.name} 
+                <br> 
+                <span class="text-contact">WA/Tele: ${u.no_wa}</span>
+            </td>
+            <td class="text-right">
+                <button class="btn btn-danger delete-btn" data-delete-id="${u.id}">Hapus</button>
+            </td>
         `;
-        DOMElements.tbody.innerHTML += row;
+        
+        fragment.appendChild(tr);
     });
+    
+    DOMElements.tbody.appendChild(fragment);
 }
 
 /**
@@ -229,9 +258,18 @@ document.addEventListener('DOMContentLoaded', () => {
     DOMElements.addUserBtn.addEventListener('click', addUser);
     DOMElements.logoutBtn.addEventListener('click', logout);
     
-    // Global functions (needed for onclick in generated HTML table)
-    window.deleteUser = deleteUser;
-    window.logout = logout; // Though already attached to button, keep for completeness
+    // Event delegation untuk tombol Hapus (bekerja untuk semua tombol yang ditambah ke tabel)
+    DOMElements.tbody.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-btn')) {
+            const id = parseInt(e.target.getAttribute('data-delete-id'));
+            console.log('Delete button clicked for ID:', id);
+            deleteUser(id, e.target);
+        }
+    });
+    
+    // Global functions (needed for dynamic event listeners in render function)
+    window.deleteUser = deleteUser; 
+    window.logout = logout; 
 
     const storedPass = localStorage.getItem('admin_pass');
     if (storedPass) {

@@ -1,10 +1,12 @@
 {
   "name": "license-manager",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "@vercel/kv": "^1.0.0"
   },
   "scripts": {
     "start": "echo 'Aplikasi ini dirancang untuk di-deploy di Vercel.'"
   }
+
 }
