@@ -51,18 +51,20 @@ export default async function handler(req, res) {
 
     // Aksi Hapus User
     if (action === 'delete') {
-      const idToDelete = payload.id;
+      const idToDelete = parseInt(payload.id);
+      console.log(`DELETE: Mencoba menghapus ID ${idToDelete}, tipe: ${typeof idToDelete}, currentData length: ${currentData.length}`);
+      
       // Filter data: buat array baru yang TIDAK mengandung ID yang ingin dihapus.
-      const newData = currentData.filter(u => u.id != idToDelete); 
+      const newData = currentData.filter(u => u.id !== idToDelete); 
       
       if (newData.length === currentData.length) {
-          console.log(`WARN: ID ${idToDelete} tidak ditemukan.`);
+          console.log(`WARN: ID ${idToDelete} tidak ditemukan. Data sebelum filter:`, currentData);
           // Mengembalikan data saat ini dan pesan error, tetapi dengan status 200 agar klien tidak crash
           return res.status(200).json({ success: false, data: currentData, error: `ID ${idToDelete} tidak ditemukan.` });
       }
 
       await kv.set('license_users', newData);
-      console.log('SUCCESS: User ID:', idToDelete, 'berhasil dihapus.');
+      console.log('SUCCESS: User ID:', idToDelete, 'berhasil dihapus. Data baru:', newData);
       return res.status(200).json({ success: true, data: newData });
     }
   }

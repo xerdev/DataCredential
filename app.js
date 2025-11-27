@@ -177,12 +177,12 @@ async function deleteUser(id, button) {
             body: JSON.stringify({
                 password: pass,
                 action: 'delete',
-                payload: { id }
+                payload: { id: parseInt(id) }
             })
         });
 
         const json = await res.json();
-        console.log('Response dari API:', json);
+        console.log('Response dari API:', json, 'Status:', res.status);
         
         if (res.ok) {
             // Jika sukses, response code 200
@@ -190,6 +190,7 @@ async function deleteUser(id, button) {
             showModal('Sukses!', `Lisensi ID ${id} berhasil dihapus.`, false);
         } else {
             // Jika gagal (misal 403 Forbidden atau 400 Bad Request)
+            console.error('Delete gagal dengan status:', res.status, 'error:', json.error);
             showModal('Gagal Hapus', json.error || 'Terjadi kesalahan saat menghapus data. Cek log Vercel.', false);
         }
     } catch(e) {

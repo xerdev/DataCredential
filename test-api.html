@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        .test-section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        textarea { width: 100%; height: 150px; font-family: monospace; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .result { background: #f8f9fa; padding: 10px; margin-top: 10px; border-left: 4px solid #007bff; white-space: pre-wrap; word-wrap: break-word; }
+        .error { border-left-color: #dc3545; }
+        .success { border-left-color: #28a745; }
+    </style>
+</head>
+<body>
+    <h1>API Test Panel</h1>
+
+    <div class="test-section">
+        <h3>1. Test GET (Load Data)</h3>
+        <button onclick="testGET()">Test GET /api</button>
+        <div id="result-get" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Test POST - Add User</h3>
+        <label>Name: <input type="text" id="test-name" value="Test User" placeholder="Nama"></label><br>
+        <label>ID: <input type="number" id="test-id" value="999" placeholder="ID"></label><br>
+        <label>WA: <input type="text" id="test-wa" value="08123456789" placeholder="No WA"></label><br>
+        <label>Password: <input type="password" id="test-pass" value="FirmanID123" placeholder="Password"></label><br>
+        <button onclick="testADD()">Test ADD User</button>
+        <div id="result-add" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Test POST - Delete User</h3>
+        <label>ID to Delete: <input type="number" id="test-delete-id" value="999" placeholder="ID"></label><br>
+        <label>Password: <input type="password" id="test-delete-pass" value="FirmanID123" placeholder="Password"></label><br>
+        <button onclick="testDELETE()">Test DELETE User</button>
+        <div id="result-delete" class="result"></div>
+    </div>
+
+    <script>
+        const API = '/api';
+
+        async function testGET() {
+            const div = document.getElementById('result-get');
+            try {
+                const res = await fetch(API);
+                const json = await res.json();
+                div.innerHTML = `<strong>Status: ${res.status}</strong>\n${JSON.stringify(json, null, 2)}`;
+                div.className = 'result success';
+            } catch (e) {
+                div.innerHTML = `<strong>Error:</strong>\n${e.message}`;
+                div.className = 'result error';
+            }
+        }
+
+        async function testADD() {
+            const div = document.getElementById('result-add');
+            const name = document.getElementById('test-name').value;
+            const id = document.getElementById('test-id').value;
+            const wa = document.getElementById('test-wa').value;
+            const pass = document.getElementById('test-pass').value;
+
+            try {
+                const res = await fetch(API, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        password: pass,
+                        action: 'add',
+                        payload: { name, id: parseInt(id), no_wa: wa }
+                    })
+                });
+                const json = await res.json();
+                div.innerHTML = `<strong>Status: ${res.status}</strong>\n${JSON.stringify(json, null, 2)}`;
+                div.className = 'result ' + (res.ok ? 'success' : 'error');
+            } catch (e) {
+                div.innerHTML = `<strong>Error:</strong>\n${e.message}`;
+                div.className = 'result error';
+            }
+        }
+
+        async function testDELETE() {
+            const div = document.getElementById('result-delete');
+            const id = parseInt(document.getElementById('test-delete-id').value);
+            const pass = document.getElementById('test-delete-pass').value;
+
+            try {
+                const res = await fetch(API, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        password: pass,
+                        action: 'delete',
+                        payload: { id }
+                    })
+                });
+                const json = await res.json();
+                div.innerHTML = `<strong>Status: ${res.status}</strong>\n${JSON.stringify(json, null, 2)}`;
+                div.className = 'result ' + (res.ok ? 'success' : 'error');
+            } catch (e) {
+                div.innerHTML = `<strong>Error:</strong>\n${e.message}`;
+                div.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>
